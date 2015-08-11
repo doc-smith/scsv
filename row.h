@@ -75,6 +75,15 @@ private:
         }
     };
 
+    template <size_t Index>
+    struct TImpl<Index, const TIgnore> {
+        static void To(const std::vector<std::string>& tokens, TIgnore) {
+            if (Index >= tokens.size()) {
+                throw TCSVError("to many values to unpack");
+            }
+        }
+    };
+
     template <size_t Index, typename T, typename ... Args>
     struct TImpl<Index, T, Args...> {
         static void To(const std::vector<std::string>& tokens, T& t, Args& ... args) {
