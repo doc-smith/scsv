@@ -61,7 +61,7 @@ public:
     }
 
     template <typename ... Args>
-    void To(Args& ... args) {
+    void To(Args&& ... args) {
         TImpl<0, Args...>::To(Tokens, args...);
     }
 
