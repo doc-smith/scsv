@@ -70,7 +70,7 @@ public:
             case TState::FIELD_BEGUN:
                 if (c == Delim) {
                     if (!quoted) {
-                        SubmitField(start, pos - spaces);
+                        SubmitField(start, pos - spaces - 1);
                         start = pos;
                     }
                 } else if (c == QuoteChar) {
@@ -89,7 +89,7 @@ public:
                 break;
             case TState::FIELD_MIGHT_HAVE_ENDED:
                 if (c == Delim) {
-                    SubmitField(start + 1, pos - spaces - 1);
+                    SubmitField(start + 1, pos - spaces - 2);
                     start = pos;
                 } else if (c == QuoteChar) {
                     if (spaces) {
