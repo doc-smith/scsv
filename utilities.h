@@ -44,6 +44,13 @@ public:
         bool quoted = false;
         int spaces = 0;
 
+        auto SubmitField = [&](std::size_t start, std::size_t end) {
+            Submit(str.data() + start, end - start);
+            quoted = false;
+            spaces = 0;
+            state  = TState::FIELD_NOT_BEGUN;
+        };
+
         while (pos < str.length()) {
             char c = str[pos++];
             switch (state) {
@@ -54,10 +61,7 @@ public:
                     state = TState::FIELD_BEGUN;
                     quoted = true;
                 } else if (c == Delim) {
-                    Submit(str.data() + start, 0);
-                    quoted = false;
-                    spaces = 0;
-                    state = TState::FIELD_NOT_BEGUN;
+                    SubmitField(start, start);
                     start = pos;
                 } else {
                     state = TState::FIELD_BEGUN;
@@ -66,10 +70,7 @@ public:
             case TState::FIELD_BEGUN:
                 if (c == Delim) {
                     if (!quoted) {
-                        Submit(str.data() + start, pos - start - spaces - 1);
-                        quoted = false;
-                        spaces = 0;
-                        state = TState::FIELD_NOT_BEGUN;
+                        SubmitField(start, pos - spaces);
                         start = pos;
                     }
                 } else if (c == QuoteChar) {
@@ -88,10 +89,7 @@ public:
                 break;
             case TState::FIELD_MIGHT_HAVE_ENDED:
                 if (c == Delim) {
-                    Submit(str.data() + start + 1, pos - start - spaces - 1);
-                    quoted = false;
-                    spaces = 0;
-                    state = TState::FIELD_NOT_BEGUN;
+                    SubmitField(start + 1, pos - spaces - 1);
                     start = pos;
                 } else if (c == QuoteChar) {
                     if (spaces) {
@@ -112,10 +110,10 @@ public:
         if (pos != start) {
             switch (state) {
             case TState::FIELD_MIGHT_HAVE_ENDED:
-                Submit(str.data() + start + 1, pos - start - spaces - 2);
+                SubmitField(start + 1, pos - spaces - 1);
                 break;
             case TState::FIELD_BEGUN:
-                Submit(str.data() + start, pos - start);
+                SubmitField(start, pos);
                 break;
             case TState::FIELD_NOT_BEGUN:
                 break;
