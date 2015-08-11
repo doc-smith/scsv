@@ -13,36 +13,40 @@ struct TIgnore {};
 static const TIgnore ignore;
 
 
-namespace {
-
-    template <typename T>
-    T ConvertValue(const std::string& s);
+template <typename T>
+struct TConverter;
 
 
-    template <>
-    std::string ConvertValue(const std::string& s) {
+template <>
+struct TConverter<std::string> {
+    static std::string ConvertValue(const std::string& s) {
         return s;
     }
+};
 
 
-    template <>
-    int ConvertValue(const std::string& s) {
+template <>
+struct TConverter<int> {
+    static int ConvertValue(const std::string& s) {
         return std::stoi(s);
     }
+};
 
 
-    template <>
-    double ConvertValue(const std::string& s) {
+template <>
+struct TConverter<double> {
+    static double ConvertValue(const std::string& s) {
         return std::stod(s);
     }
+};
 
 
-    template <>
-    float ConvertValue(const std::string& s) {
+template <>
+struct TConverter<float> {
+    static float ConvertValue(const std::string& s) {
         return std::stof(s);
     }
-
-}
+};
 
 
 class TRow {
@@ -67,7 +71,7 @@ private:
             if (Index >= tokens.size()) {
                 throw TCSVError("to many values to unpack");
             }
-            t = ConvertValue<T>(tokens[Index]);
+            t = TConverter<T>::ConvertValue(tokens[Index]);
         }
     };
 
@@ -77,7 +81,7 @@ private:
             if (Index >= tokens.size()) {
                 throw TCSVError("to many values to unpack");
             }
-            t = ConvertValue<T>(tokens[Index]);
+            t = TConverter<T>::ConvertValue(tokens[Index]);
             TImpl<Index + 1, Args...>::To(tokens, args...);
         }
     };
