@@ -4,8 +4,6 @@
 #include <iostream>
 #include <string>
 
-using namespace NCSV;
-
 
 struct TMyInt {
     int Value;
@@ -13,6 +11,8 @@ struct TMyInt {
 
 
 int main() {
+    using namespace NCSV;
+
     try {
         TCSV csv("test.csv");
         while (csv.HasNext()) {
