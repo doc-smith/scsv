@@ -13,7 +13,7 @@ namespace NCSV {
 
 
 struct TIgnore {};
-static const TIgnore ignore;
+static TIgnore ignore;
 
 
 template<bool IsFunction, typename T>
@@ -37,12 +37,20 @@ struct TParser<false, T> {
 };
 
 
-template <typename T>
-void Parse(const std::string& s, T& value) {
-    constexpr bool is_function =
-      std::is_convertible<T, std::function<void(const std::string&)>>::value;
-    TParser<is_function, T>::Parse(s, value);
-}
+    namespace {
+
+    template <typename T>
+    void Parse(const std::string& s, T& value) {
+        constexpr bool is_function =
+          std::is_convertible<T, std::function<void(const std::string&)>>::value;
+        TParser<is_function, T>::Parse(s, value);
+    }
+
+
+    template<>
+    void Parse<TIgnore>(const std::string& s, TIgnore&) {}
+
+    } // namespace
 
 
 class TRow {
@@ -71,15 +79,6 @@ private:
         }
     };
 
-    template <size_t Index>
-    struct TImpl<Index, const TIgnore> {
-        static void To(const std::vector<std::string>& tokens, TIgnore) {
-            if (Index >= tokens.size()) {
-                throw TCSVError("to many values to unpack");
-            }
-        }
-    };
-
     template <size_t Index, typename T, typename ... Args>
     struct TImpl<Index, T, Args...> {
         static void To(const std::vector<std::string>& tokens, T& t, Args& ... args) {
@@ -87,16 +86,6 @@ private:
                 throw TCSVError("to many values to unpack");
             }
             Parse(tokens[Index], t);
-            TImpl<Index + 1, Args...>::To(tokens, args...);
-        }
-    };
-
-    template <size_t Index, typename ... Args>
-    struct TImpl<Index, const TIgnore, Args...> {
-        static void To(const std::vector<std::string>& tokens, TIgnore, Args& ... args) {
-            if (Index >= tokens.size()) {
-                throw TCSVError("to many values to unpack");
-            }
             TImpl<Index + 1, Args...>::To(tokens, args...);
         }
     };
