@@ -2,7 +2,10 @@
 
 #include "utilities.h"
 
+#include <functional>
+#include <sstream>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 
@@ -13,40 +16,33 @@ struct TIgnore {};
 static const TIgnore ignore;
 
 
+template<bool IsFunction, typename T>
+struct TParser;
+
+
+template<typename T>
+struct TParser<true, T> {
+    static void Parse(const std::string& s, T& parser) {
+        parser(s);
+    }
+};
+
+
+template<typename T>
+struct TParser<false, T> {
+    static void Parse(const std::string& s, T& value) {
+        std::istringstream is(s);
+        is >> value;
+    }
+};
+
+
 template <typename T>
-struct TConverter;
-
-
-template <>
-struct TConverter<std::string> {
-    static std::string ConvertValue(const std::string& s) {
-        return s;
-    }
-};
-
-
-template <>
-struct TConverter<int> {
-    static int ConvertValue(const std::string& s) {
-        return std::stoi(s);
-    }
-};
-
-
-template <>
-struct TConverter<double> {
-    static double ConvertValue(const std::string& s) {
-        return std::stod(s);
-    }
-};
-
-
-template <>
-struct TConverter<float> {
-    static float ConvertValue(const std::string& s) {
-        return std::stof(s);
-    }
-};
+void Parse(const std::string& s, T& value) {
+    constexpr bool is_function =
+      std::is_convertible<T, std::function<void(const std::string&)>>::value;
+    TParser<is_function, T>::Parse(s, value);
+}
 
 
 class TRow {
@@ -71,7 +67,7 @@ private:
             if (Index >= tokens.size()) {
                 throw TCSVError("to many values to unpack");
             }
-            t = TConverter<T>::ConvertValue(tokens[Index]);
+            Parse(tokens[Index], t);
         }
     };
 
@@ -90,7 +86,7 @@ private:
             if (Index >= tokens.size()) {
                 throw TCSVError("to many values to unpack");
             }
-            t = TConverter<T>::ConvertValue(tokens[Index]);
+            Parse(tokens[Index], t);
             TImpl<Index + 1, Args...>::To(tokens, args...);
         }
     };

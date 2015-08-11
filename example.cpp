@@ -1,4 +1,5 @@
 #include "csv.h"
+#include "utilities.h"
 
 #include <iostream>
 #include <string>
@@ -11,17 +12,6 @@ struct TMyInt {
 };
 
 
-namespace NCSV {
-    template <>
-    struct TConverter<TMyInt> {
-        static TMyInt ConvertValue(const std::string& s) {
-            return TMyInt { std::stoi(s) };
-        }
-    };
-}
-
-
-
 int main() {
     try {
         TCSV csv("test.csv");
@@ -30,7 +20,10 @@ int main() {
             int b;
             std::string c;
             TMyInt d;
-            csv.Next().To(a, b, ignore, c, d);
+            auto dReader = [&d](const std::string& s) {
+                d.Value = std::stoi(s);
+            };
+            csv.Next().To(a, b, ignore, c, dReader);
             std::cout << a << ", "
                       << b << ", "
                       << c << ", "
