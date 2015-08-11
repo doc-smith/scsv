@@ -20,10 +20,11 @@ int main() {
             int b;
             std::string c;
             TMyInt d;
-            auto dReader = [&d](const std::string& s) {
-                d.Value = std::stoi(s);
-            };
-            csv.Next().To(a, b, ignore, c, dReader);
+            csv.Next().To(a, b, ignore, c,
+                [&d](const std::string& s) {
+                    d.Value = std::stoi(s);
+                }
+            );
             std::cout << a << ", "
                       << b << ", "
                       << c << ", "
