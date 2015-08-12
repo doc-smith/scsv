@@ -50,6 +50,12 @@ struct TParser<false, T> {
     template<>
     void Parse<TIgnore>(const std::string& s, TIgnore&) {}
 
+
+    template<>
+    void Parse<std::string>(const std::string& s, std::string& value) {
+        value = s;
+    }
+
     } // namespace
 
 
