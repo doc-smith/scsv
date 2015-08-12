@@ -14,7 +14,7 @@ int main() {
     using namespace NCSV;
 
     try {
-        TCSV csv("test.csv");
+        TCSV csv("test.csv", TCSVParams().Delim(',').SkipHeader(true));
         while (csv.HasNext()) {
             int a;
             int b;

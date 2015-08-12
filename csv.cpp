@@ -4,10 +4,11 @@
 namespace NCSV {
 
 
-TCSV::TCSV(const std::string& filename, char delim, char quoteChar)
+TCSV::TCSV(const std::string& filename, TCSVParams params)
     : Input(filename)
-    , Delim(delim)
-    , QuoteChar(quoteChar)
+    , Delim(params._Delim)
+    , QuoteChar(params._QuoteChar)
+    , SkipHeader(params._SkipHeader)
 {
     if (!Input) {
         throw TCSVError("cannot open csv file");
