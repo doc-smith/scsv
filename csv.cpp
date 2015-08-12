@@ -4,9 +4,10 @@
 namespace NCSV {
 
 
-TCSV::TCSV(const std::string& filename, char delim)
+TCSV::TCSV(const std::string& filename, char delim, char quoteChar)
     : Input(filename)
     , Delim(delim)
+    , QuoteChar(quoteChar)
 {
     if (!Input) {
         throw TCSVError("cannot open csv file");
@@ -29,7 +30,7 @@ TRow TCSV::Next() {
         FirstLine = false;
     }
 
-    TRow row(std::move(Line), Delim);
+    TRow row(std::move(Line), Delim, QuoteChar);
 
     if (!std::getline(Input, Line)) {
         Eof = true;

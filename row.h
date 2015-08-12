@@ -55,9 +55,12 @@ struct TParser<false, T> {
 
 class TRow {
 public:
-    TRow(const std::string& data, char delim)
-        : Tokens(Split(data, delim))
-    {
+    TRow(const std::string& data, char delim, char quoteChar) {
+        auto callback = [&](const char* data, std::size_t size) {
+            Tokens.push_back(std::string(data, size));
+        };
+        TCSVSplitter<decltype(callback)> splitter(callback, delim, quoteChar);
+        splitter.Split(data);
     }
 
     template <typename ... Args>
@@ -65,11 +68,15 @@ public:
         TImpl<0, Args...>::To(Tokens, args...);
     }
 
+    void To(std::vector<std::string>& row) const {
+        row.assign(Tokens.begin(), Tokens.end());
+    }
+
 private:
-    template <size_t Index, typename ... Args>
+    template <std::size_t Index, typename ... Args>
     struct TImpl;
 
-    template <size_t Index, typename T>
+    template <std::size_t Index, typename T>
     struct TImpl<Index, T> {
         static void To(const std::vector<std::string>& tokens, T& t) {
             if (Index >= tokens.size()) {
@@ -79,7 +86,7 @@ private:
         }
     };
 
-    template <size_t Index, typename T, typename ... Args>
+    template <std::size_t Index, typename T, typename ... Args>
     struct TImpl<Index, T, Args...> {
         static void To(const std::vector<std::string>& tokens, T& t, Args& ... args) {
             if (Index >= tokens.size()) {

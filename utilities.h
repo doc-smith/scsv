@@ -19,11 +19,8 @@ class TCSVError : public std::runtime_error {
 public:
     TCSVError(const std::string& msg)
         : std::runtime_error(msg)
-    {}  
+    {}
 };
-
-
-std::vector<std::string> Split(const std::string& str, char delim);
 
 
 template <typename TCallback>
