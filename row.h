@@ -10,13 +10,13 @@
 #include <vector>
 
 
-namespace NCSV {
+namespace CSV {
 
 
-struct TIgnore {
-    TIgnore() {}
+struct Ignore {
+    Ignore() {}
 };
-static const TIgnore ignore;
+static const Ignore ignore;
 
 
 enum ArgumentType {
@@ -27,12 +27,12 @@ enum ArgumentType {
 
 
 template<int ArgumentType, typename T>
-struct TParser;
+struct Parser;
 
 
 template<typename T>
-struct TParser<PLAIN, T> {
-    static void Parse(const std::string& s, T& value) {
+struct Parser<PLAIN, T> {
+    static void parse(const std::string& s, T& value) {
         std::istringstream is(s);
         is >> value;
     }
@@ -40,16 +40,16 @@ struct TParser<PLAIN, T> {
 
 
 template<typename T>
-struct TParser<FUNCTOR, T> {
-    static void Parse(const std::string& s, T& parser) {
+struct Parser<FUNCTOR, T> {
+    static void parse(const std::string& s, T& parser) {
         parser(s);
     }
 };
 
 
 template<typename T>
-struct TParser<OPTIONAL, T> {
-    static void Parse(const std::string& s, T& optional) {
+struct Parser<OPTIONAL, T> {
+    static void parse(const std::string& s, T& optional) {
         if (!s.empty()) {
             typename T::value_type value;
             std::istringstream is(s);
@@ -83,12 +83,12 @@ struct TParser<OPTIONAL, T> {
         constexpr bool is_function =
           std::is_convertible<T, std::function<void(const std::string&)>>::value;
         constexpr bool is_optional = IsOptional<T>::value;
-        TParser<SelectType(is_function, is_optional), T>::Parse(s, value);
+        Parser<SelectType(is_function, is_optional), T>::parse(s, value);
     }
 
 
     template<>
-    void Parse<const TIgnore>(const std::string& s, const TIgnore&) {
+    void Parse<const Ignore>(const std::string& s, const Ignore&) {
         UNUSED(s);
     }
 
@@ -101,51 +101,51 @@ struct TParser<OPTIONAL, T> {
     } // namespace
 
 
-class TRow {
+class Row {
 public:
-    TRow(const std::string& data, char delim, char quoteChar) {
+    Row(const std::string& data, char delim, char quoteChar) {
         auto callback = [&](const char* data, std::size_t size) {
-            Tokens.push_back(std::string(data, size));
+            tokens_.push_back(std::string(data, size));
         };
-        TCSVSplitter<decltype(callback)> splitter(callback, delim, quoteChar);
-        splitter.Split(data);
+        CSVSplitter<decltype(callback)> splitter(callback, delim, quoteChar);
+        splitter.split(data);
     }
 
     template <typename ... Args>
-    void To(Args&& ... args) {
-        TImpl<0, Args...>::To(Tokens, args...);
+    void to(Args&& ... args) {
+        Impl<0, Args...>::to(tokens_, args...);
     }
 
-    void To(std::vector<std::string>& row) const {
-        row.assign(Tokens.begin(), Tokens.end());
+    void to(std::vector<std::string>& row) const {
+        row.assign(tokens_.begin(), tokens_.end());
     }
 
 private:
     template <std::size_t Index, typename ... Args>
-    struct TImpl;
+    struct Impl;
 
     template <std::size_t Index, typename T>
-    struct TImpl<Index, T> {
-        static void To(const std::vector<std::string>& tokens, T& t) {
+    struct Impl<Index, T> {
+        static void to(const std::vector<std::string>& tokens, T& t) {
             if (Index >= tokens.size()) {
-                throw TCSVError("to many values to unpack");
+                throw CSVError("to many values to unpack");
             }
             Parse(tokens[Index], t);
         }
     };
 
     template <std::size_t Index, typename T, typename ... Args>
-    struct TImpl<Index, T, Args...> {
-        static void To(const std::vector<std::string>& tokens, T& t, Args& ... args) {
+    struct Impl<Index, T, Args...> {
+        static void to(const std::vector<std::string>& tokens, T& t, Args& ... args) {
             if (Index >= tokens.size()) {
-                throw TCSVError("to many values to unpack");
+                throw CSVError("to many values to unpack");
             }
             Parse(tokens[Index], t);
-            TImpl<Index + 1, Args...>::To(tokens, args...);
+            Impl<Index + 1, Args...>::to(tokens, args...);
         }
     };
 
-    std::vector<std::string> Tokens;
+    std::vector<std::string> tokens_;
 };
 
 

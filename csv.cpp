@@ -1,40 +1,40 @@
 #include "csv.h"
 
 
-namespace NCSV {
+namespace CSV {
 
 
-TCSV::TCSV(const std::string& filename, TCSVParams params)
-    : Input(filename)
-    , Delim(params._Delim)
-    , QuoteChar(params._QuoteChar)
-    , SkipHeader(params._SkipHeader)
+CSVReader::CSVReader(const std::string& filename, CSVParams params)
+    : input_(filename)
+    , delim_(params._Delim)
+    , quoteChar_(params._QuoteChar)
+    , skipHeader_(params._SkipHeader)
 {
-    if (!Input) {
-        throw TCSVError("cannot open csv file");
+    if (!input_) {
+        throw CSVError("cannot open csv file");
     }
 }
 
 
-bool TCSV::HasNext() const {
-    return !Eof;
+bool CSVReader::hasNext() const {
+    return !eof_;
 }
 
 
-TRow TCSV::Next() {
-    if (!HasNext()) {
-        throw TCSVError("end of file");
+Row CSVReader::next() {
+    if (!hasNext()) {
+        throw CSVError("end of file");
     }
 
-    if (FirstLine) {
-        std::getline(Input, Line);
-        FirstLine = false;
+    if (firstLine_) {
+        std::getline(input_, line_);
+        firstLine_ = false;
     }
 
-    TRow row(std::move(Line), Delim, QuoteChar);
+    Row row(std::move(line_), delim_, quoteChar_);
 
-    if (!std::getline(Input, Line)) {
-        Eof = true;
+    if (!std::getline(input_, line_)) {
+        eof_ = true;
     }
 
     return row;

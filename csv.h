@@ -7,21 +7,21 @@
 #include <string>
 
 
-namespace NCSV {
+namespace CSV {
 
 
-struct TCSVParams {
-    TCSVParams& Delim(char delim) {
+struct CSVParams {
+    CSVParams& Delim(char delim) {
         _Delim = delim;
         return *this;
     }
 
-    TCSVParams& QuoteChar(char quoteChar) {
+    CSVParams& QuoteChar(char quoteChar) {
         _QuoteChar = quoteChar;
         return *this;
     }
 
-    TCSVParams& SkipHeader(bool skipHeader) {
+    CSVParams& SkipHeader(bool skipHeader) {
         _SkipHeader = skipHeader;
         return *this;
     }
@@ -32,23 +32,23 @@ struct TCSVParams {
 };
 
 
-class TCSV {
-    DECLARE_NOCOPY(TCSV)
+class CSVReader {
+    DECLARE_NOCOPY(CSVReader)
 
 public:
-    TCSV(const std::string& filename, TCSVParams params = TCSVParams());
-    bool HasNext() const;
-    TRow Next();
+    CSVReader(const std::string& filename, CSVParams params = CSVParams());
+    bool hasNext() const;
+    Row next();
 
 private:
-    std::ifstream Input;
-    char Delim;
-    char QuoteChar;
-    bool SkipHeader;
+    std::ifstream input_;
+    char delim_;
+    char quoteChar_;
+    bool skipHeader_;
 
-    std::string Line;
-    bool Eof = false;
-    bool FirstLine = true;
+    std::string line_;
+    bool eof_ = false;
+    bool firstLine_ = true;
 };
 
 

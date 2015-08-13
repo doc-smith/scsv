@@ -14,67 +14,67 @@
 #define UNUSED(x) (void)(x)
 
 
-namespace NCSV {
+namespace CSV {
 
 
-class TCSVError : public std::runtime_error {
+class CSVError : public std::runtime_error {
 public:
-    TCSVError(const std::string& msg)
+    CSVError(const std::string& msg)
         : std::runtime_error(msg)
     {}
 };
 
 
 template <typename TCallback>
-class TCSVSplitter {
-    DECLARE_NOCOPY(TCSVSplitter)
+class CSVSplitter {
+    DECLARE_NOCOPY(CSVSplitter)
 
 public:
-    TCSVSplitter(const TCallback& submitCallback, char delim, char quoteChar)
-        : Submit(submitCallback)
-        , Delim(delim)
-        , QuoteChar(quoteChar)
+    CSVSplitter(const TCallback& submitCallback, char delim, char quoteChar)
+        : submit_(submitCallback)
+        , delim_(delim)
+        , quoteChar_(quoteChar)
     {}
 
-    void Split(const std::string& str) const {
-        TState state = TState::FIELD_NOT_BEGUN;
+    void split(const std::string& str) const {
+        State state = State::FIELD_NOT_BEGUN;
         std::size_t start = 0;
         std::size_t pos = start;
         bool quoted = false;
         int spaces = 0;
 
-        auto SubmitField = [&](std::size_t start, std::size_t end) {
-            Submit(str.data() + start, end - start);
+        auto submitField = [&](std::size_t start, std::size_t end) {
+            submit_(str.data() + start, end - start);
             quoted = false;
             spaces = 0;
-            state  = TState::FIELD_NOT_BEGUN;
+            state  = State::FIELD_NOT_BEGUN;
         };
 
         while (pos < str.length()) {
             char c = str[pos++];
             switch (state) {
-            case TState::FIELD_NOT_BEGUN:
+            case State::FIELD_NOT_BEGUN:
                 if (isspace(c)) {
                     start = pos;
-                } else if (c == QuoteChar) {
-                    state = TState::FIELD_BEGUN;
+                } else if (c == quoteChar_) {
+                    state = State::FIELD_BEGUN;
                     quoted = true;
-                } else if (c == Delim) {
-                    SubmitField(start, start);
+                } else if (c == delim_) {
+                    submitField(start, start);
                     start = pos;
                 } else {
-                    state = TState::FIELD_BEGUN;
+                    state = State::FIELD_BEGUN;
                 }
                 break;
-            case TState::FIELD_BEGUN:
-                if (c == Delim) {
+            case State::FIELD_BEGUN:
+                if (c == delim_) {
                     if (!quoted) {
-                        SubmitField(start, pos - spaces - 1);
+                        submitField(start, pos - spaces - 1);
                         start = pos;
                     }
-                } else if (c == QuoteChar) {
+                } else if (c == quoteChar_) {
                     if (quoted) {
-                        state = TState::FIELD_MIGHT_HAVE_ENDED;
+                        state = State::FIELD_MIGHT_HAVE_ENDED;
                     } else {
                         spaces = 0;
                     }
@@ -86,20 +86,20 @@ public:
                     spaces = 0;
                 }
                 break;
-            case TState::FIELD_MIGHT_HAVE_ENDED:
-                if (c == Delim) {
-                    SubmitField(start + 1, pos - spaces - 2);
+            case State::FIELD_MIGHT_HAVE_ENDED:
+                if (c == delim_) {
+                    submitField(start + 1, pos - spaces - 2);
                     start = pos;
-                } else if (c == QuoteChar) {
+                } else if (c == quoteChar_) {
                     if (spaces) {
                         spaces = 0;
                     } else {
-                        state = TState::FIELD_BEGUN;
+                        state = State::FIELD_BEGUN;
                     }
                 } else if (isspace(c)) {
                     ++spaces;
                 } else {
-                    state = TState::FIELD_BEGUN;
+                    state = State::FIELD_BEGUN;
                     spaces = 0;
                 }
                 break;
@@ -108,28 +108,28 @@ public:
 
         if (pos != start) {
             switch (state) {
-            case TState::FIELD_MIGHT_HAVE_ENDED:
-                SubmitField(start + 1, pos - spaces - 1);
+            case State::FIELD_MIGHT_HAVE_ENDED:
+                submitField(start + 1, pos - spaces - 1);
                 break;
-            case TState::FIELD_BEGUN:
-                SubmitField(start, pos);
+            case State::FIELD_BEGUN:
+                submitField(start, pos);
                 break;
-            case TState::FIELD_NOT_BEGUN:
+            case State::FIELD_NOT_BEGUN:
                 break;
             };
         }
     }
 
 private:
-    enum class TState {
+    enum class State {
         FIELD_NOT_BEGUN,
         FIELD_BEGUN,
         FIELD_MIGHT_HAVE_ENDED
     };
 
-    TCallback Submit;
-    char Delim;
-    char QuoteChar;
+    TCallback submit_;
+    char delim_;
+    char quoteChar_;
 };
 
 

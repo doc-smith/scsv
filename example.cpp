@@ -6,22 +6,22 @@
 #include <string>
 
 
-struct TMyInt {
+struct MyInt {
     int Value;
 };
 
 
 int main() {
-    using namespace NCSV;
+    using namespace CSV;
 
     try {
-        TCSV csv("test.csv", TCSVParams().Delim(',').SkipHeader(true));
-        while (csv.HasNext()) {
+        CSVReader csv("test.csv", CSVParams().Delim(',').SkipHeader(true));
+        while (csv.hasNext()) {
             Optional<int> a;
             int b;
             std::string c;
-            TMyInt d;
-            csv.Next().To(a, b, ignore, c,
+            MyInt d;
+            csv.next().to(a, b, ignore, c,
                 [&d](const std::string& s) {
                     d.Value = std::stoi(s);
                 }
