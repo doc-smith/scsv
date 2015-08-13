@@ -40,6 +40,11 @@ public:
     bool hasNext() const;
     Row next();
 
+    template <typename ... Args>
+    void to(Args&&... args) {
+        next().to(std::forward<Args>(args)...);
+    }
+
 private:
     std::ifstream input_;
     char delim_;

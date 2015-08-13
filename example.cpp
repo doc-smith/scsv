@@ -21,7 +21,7 @@ int main() {
             int b;
             std::string c;
             MyInt d;
-            csv.next().to(a, b, ignore, c,
+            csv.to(a, b, ignore, c,
                 [&d](const std::string& s) {
                     d.Value = std::stoi(s);
                 }
