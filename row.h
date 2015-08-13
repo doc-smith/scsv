@@ -12,8 +12,10 @@
 namespace NCSV {
 
 
-struct TIgnore {};
-static TIgnore ignore;
+struct TIgnore {
+    TIgnore() {}
+};
+static const TIgnore ignore;
 
 
 template<bool IsFunction, typename T>
@@ -48,7 +50,9 @@ struct TParser<false, T> {
 
 
     template<>
-    void Parse<TIgnore>(const std::string& s, TIgnore&) {}
+    void Parse<const TIgnore>(const std::string& s, const TIgnore&) {
+        UNUSED(s);
+    }
 
 
     template<>

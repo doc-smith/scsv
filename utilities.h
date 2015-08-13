@@ -11,6 +11,8 @@
     T(const T&) = delete; \
     T& operator = (const T&) = delete;
 
+#define UNUSED(x) (void)(x)
+
 
 namespace NCSV {
 
