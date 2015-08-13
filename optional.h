@@ -15,6 +15,8 @@ public:
 template <typename TValue>
 class Optional {
 public:
+    typedef TValue value_type;
+
     Optional()
         : hasValue_(false)
     {}
@@ -100,6 +102,11 @@ public:
         return std::move(value_);
     }
 
+    void clear() {
+        hasValue_ = false;
+        value_.~TValue();
+    }
+
 private:
 
     template <typename ... Args>
@@ -107,11 +114,6 @@ private:
         const void* ptr = &value_;
         new (const_cast<void*>(ptr)) TValue(std::forward<Args>(args)...);
         hasValue_ = true;
-    }
-
-    void clear() {
-        hasValue_ = false;
-        value_.~TValue();
     }
 
     void requireValue() const {

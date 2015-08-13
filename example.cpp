@@ -1,5 +1,6 @@
 #include "csv.h"
 #include "utilities.h"
+#include "optional.h"
 
 #include <iostream>
 #include <string>
@@ -16,7 +17,7 @@ int main() {
     try {
         TCSV csv("test.csv", TCSVParams().Delim(',').SkipHeader(true));
         while (csv.HasNext()) {
-            int a;
+            Optional<int> a;
             int b;
             std::string c;
             TMyInt d;
@@ -25,8 +26,12 @@ int main() {
                     d.Value = std::stoi(s);
                 }
             );
-            std::cout << a << ", "
-                      << b << ", "
+            if (a) {
+                std::cout << a.value() << ", ";
+            } else {
+                std::cout << "NA, ";
+            }
+            std::cout << b << ", "
                       << c << ", "
                       << d.Value << std::endl;
         }

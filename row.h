@@ -1,5 +1,6 @@
 #pragma once
 
+#include "optional.h"
 #include "utilities.h"
 
 #include <functional>
@@ -18,20 +19,19 @@ struct TIgnore {
 static const TIgnore ignore;
 
 
-template<bool IsFunction, typename T>
+enum ArgumentType {
+    PLAIN,
+    FUNCTOR,
+    OPTIONAL
+};
+
+
+template<int ArgumentType, typename T>
 struct TParser;
 
 
 template<typename T>
-struct TParser<true, T> {
-    static void Parse(const std::string& s, T& parser) {
-        parser(s);
-    }
-};
-
-
-template<typename T>
-struct TParser<false, T> {
+struct TParser<PLAIN, T> {
     static void Parse(const std::string& s, T& value) {
         std::istringstream is(s);
         is >> value;
@@ -39,13 +39,51 @@ struct TParser<false, T> {
 };
 
 
+template<typename T>
+struct TParser<FUNCTOR, T> {
+    static void Parse(const std::string& s, T& parser) {
+        parser(s);
+    }
+};
+
+
+template<typename T>
+struct TParser<OPTIONAL, T> {
+    static void Parse(const std::string& s, T& optional) {
+        if (!s.empty()) {
+            typename T::value_type value;
+            std::istringstream is(s);
+            is >> value;
+            optional = std::move(value);
+        } else {
+            optional.clear();
+        }
+    }
+};
+
+
     namespace {
+
+    template <typename T>
+    struct IsOptional {
+        enum { value = false };
+    };
+
+    template <typename T>
+    struct IsOptional<Optional<T>> {
+        enum { value = true };
+    };
+
+    constexpr int SelectType(bool is_function, bool is_optional) {
+        return is_function ? FUNCTOR : (is_optional ? OPTIONAL : PLAIN);
+    }
 
     template <typename T>
     void Parse(const std::string& s, T& value) {
         constexpr bool is_function =
           std::is_convertible<T, std::function<void(const std::string&)>>::value;
-        TParser<is_function, T>::Parse(s, value);
+        constexpr bool is_optional = IsOptional<T>::value;
+        TParser<SelectType(is_function, is_optional), T>::Parse(s, value);
     }
 
 
